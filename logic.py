@@ -1,4 +1,3 @@
-import itertools
 from abc import ABC, abstractmethod
 
 
@@ -223,3 +222,35 @@ class Biconditional(Sentence):
 
     def symbols(self) -> set[str]:
         return set.union(self.left.symbols(), self.right.symbols())
+
+
+def check_entailment(knowledge_base: Sentence, query: Sentence) -> bool:
+    def model_checking(
+        knowledge_base: Sentence,
+        query: Sentence,
+        symbols: set[str],
+        model: dict[str, bool],
+    ):
+        if not symbols:
+            if knowledge_base.evaluate(model):
+                return query.evaluate(model)
+            return True
+        else:
+            remaining_symbols = symbols.copy()
+            symbol = remaining_symbols.pop()
+
+            model_where_symbol_true = model.copy()
+            model_where_symbol_false = model.copy()
+
+            model_where_symbol_true[symbol] = True
+            model_where_symbol_false[symbol] = False
+
+            return model_checking(
+                knowledge_base, query, symbols, model_where_symbol_true
+            ) and model_checking(
+                knowledge_base, query, symbols, model_where_symbol_false
+            )
+
+    symbols = set.union(knowledge_base.symbols(), query.symbols())
+
+    return model_checking(knowledge_base, query, symbols, model=dict())
