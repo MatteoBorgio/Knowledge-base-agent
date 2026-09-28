@@ -157,3 +157,35 @@ class Or(Sentence):
 
     def symbols(self) -> set[str]:
         return set.union(*[disjunct.symbols() for disjunct in self.disjuncts])
+
+
+class Implication(Sentence):
+    def __init__(self, antecedent: Sentence, consequent: Sentence) -> None:
+        Sentence.validate(antecedent)
+        Sentence.validate(consequent)
+        self.antecedent = antecedent
+        self.consequent = consequent
+
+    def __eq__(self, value: object, /) -> bool:
+        return (
+            isinstance(value, Implication)
+            and self.antecedent == value.antecedent
+            and self.consequent == value.consequent
+        )
+
+    def __hash__(self) -> int:
+        return hash(("implies", hash(self.antecedent), hash(self.consequent)))
+
+    def __repr__(self) -> str:
+        return f"Implication({self.antecedent}, {self.consequent})"
+
+    def evaluate(self, model: dict[str, bool]):
+        return (not self.antecedent.evaluate(model)) or self.consequent.evaluate(model)
+
+    def formula(self) -> str:
+        antecedent = Sentence.parenthesize(self.antecedent.formula())
+        consequent = Sentence.parenthesize(self.consequent.formula())
+        return f"{antecedent} => {consequent}"
+
+    def symbols(self) -> set[str]:
+        return set.union(self.antecedent.symbols(), self.consequent.symbols())
