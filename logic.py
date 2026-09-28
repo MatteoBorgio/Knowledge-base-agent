@@ -150,7 +150,7 @@ class Or(Sentence):
     def formula(self) -> str:
         if len(self.disjuncts) == 1:
             return self.disjuncts[0].formula()
-        return " ∧ ".join(
+        return " ∨ ".join(
             [Sentence.parenthesize(disjunct.formula()) for disjunct in self.disjuncts]
         )
 
@@ -246,9 +246,9 @@ def check_entailment(knowledge_base: Sentence, query: Sentence) -> bool:
             model_where_symbol_false[symbol] = False
 
             return model_checking(
-                knowledge_base, query, symbols, model_where_symbol_true
+                knowledge_base, query, remaining_symbols, model_where_symbol_true
             ) and model_checking(
-                knowledge_base, query, symbols, model_where_symbol_false
+                knowledge_base, query, remaining_symbols, model_where_symbol_false
             )
 
     symbols = set.union(knowledge_base.symbols(), query.symbols())
