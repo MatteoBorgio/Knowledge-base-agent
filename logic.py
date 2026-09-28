@@ -127,3 +127,33 @@ class And(Sentence):
 
     def symbols(self) -> set[str]:
         return set.union(*[conjunct.symbols() for conjunct in self.conjuncts])
+
+
+class Or(Sentence):
+    def __init__(self, *disjuncts: Sentence) -> None:
+        for disjunct in disjuncts:
+            Sentence.validate(disjunct)
+        self.disjuncts = list(disjuncts)
+
+    def __eq__(self, value: object, /) -> bool:
+        return isinstance(value, Or) and self.disjuncts == value.disjuncts
+
+    def __hash__(self) -> int:
+        return hash(("or", tuple(hash(disjunct) for disjunct in self.disjuncts)))
+
+    def __repr__(self) -> str:
+        disjuncts = ", ".join((str(disjunct) for disjunct in self.disjuncts))
+        return f"Or({disjuncts})"
+
+    def evaluate(self, model: dict[str, bool]):
+        return any(disjunct.evaluate(model) for disjunct in self.disjuncts)
+
+    def formula(self) -> str:
+        if len(self.disjuncts) == 1:
+            return self.disjuncts[0].formula()
+        return " ∧ ".join(
+            [Sentence.parenthesize(disjunct.formula()) for disjunct in self.disjuncts]
+        )
+
+    def symbols(self) -> set[str]:
+        return set.union(*[disjunct.symbols() for disjunct in self.disjuncts])
