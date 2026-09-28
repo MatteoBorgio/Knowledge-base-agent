@@ -93,3 +93,37 @@ class Not(Sentence):
 
     def symbols(self) -> set[str]:
         return self.operand.symbols()
+
+
+class And(Sentence):
+    def __init__(self, *conjuncts: Sentence) -> None:
+        for conjunct in conjuncts:
+            Sentence.validate(conjunct)
+        self.conjuncts = list(conjuncts)
+
+    def __eq__(self, value: object, /) -> bool:
+        return isinstance(value, And) and self.conjuncts == value.conjuncts
+
+    def __hash__(self) -> int:
+        return hash(("and", tuple(hash(conjunct) for conjunct in self.conjuncts)))
+
+    def __repr__(self) -> str:
+        conjuncts = ", ".join((str(conjunct) for conjunct in self.conjuncts))
+        return f"And({conjuncts})"
+
+    def add(self, conjunct) -> None:
+        Sentence.validate(conjunct)
+        self.conjuncts.append(conjunct)
+
+    def evaluate(self, model: dict[str, bool]):
+        return all(conjunct.evaluate(model) for conjunct in self.conjuncts)
+
+    def formula(self) -> str:
+        if len(self.conjuncts) == 1:
+            return self.conjuncts[0].formula()
+        return " ∧ ".join(
+            [Sentence.parenthesize(conjunct.formula()) for conjunct in self.conjuncts]
+        )
+
+    def symbols(self) -> set[str]:
+        return set.union(*[conjunct.symbols() for conjunct in self.conjuncts])
