@@ -189,3 +189,37 @@ class Implication(Sentence):
 
     def symbols(self) -> set[str]:
         return set.union(self.antecedent.symbols(), self.consequent.symbols())
+
+
+class Biconditional(Sentence):
+    def __init__(self, left: Sentence, right: Sentence) -> None:
+        Sentence.validate(left)
+        Sentence.validate(right)
+        self.left = left
+        self.right = right
+
+    def __eq__(self, value: object, /) -> bool:
+        return (
+            isinstance(value, Biconditional)
+            and self.left == value.left
+            and self.right == value.right
+        )
+
+    def __hash__(self) -> int:
+        return hash(("biconditional", hash(self.left), hash(self.right)))
+
+    def __repr__(self) -> str:
+        return f"Biconditional({self.left}, {self.right})"
+
+    def evaluate(self, model: dict[str, bool]):
+        return (self.left.evaluate(model) and self.right.evaluate(model)) or (
+            not self.left.evaluate(model) and not self.right.evaluate(model)
+        )
+
+    def formula(self) -> str:
+        left = Sentence.parenthesize(str(self.left))
+        right = Sentence.parenthesize(str(self.right))
+        return f"{left} <=> {right}"
+
+    def symbols(self) -> set[str]:
+        return set.union(self.left.symbols(), self.right.symbols())
