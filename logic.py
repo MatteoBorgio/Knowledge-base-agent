@@ -14,12 +14,12 @@ class Sentence(ABC):
         return set()
 
     @classmethod
-    def validate(cls, sentence):
+    def validate(cls, sentence) -> None:
         if not isinstance(sentence, Sentence):
             raise TypeError("Sentence to validate must be a logical sentence.")
 
     @classmethod
-    def parenthesize(cls, string: str) -> str | bool:
+    def parenthesize(cls, string: str) -> str:
         def check_if_balanced(string: str) -> bool:
             counter = 0
             for char in string:
@@ -49,8 +49,8 @@ class Symbol(Sentence):
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def __eq__(self, other) -> bool:
-        return isinstance(other, Symbol) and self.name == other.name
+    def __eq__(self, value: object, /) -> bool:
+        return isinstance(value, Symbol) and self.name == value.name
 
     def __hash__(self) -> int:
         return hash(("symbol", self.name))
@@ -69,3 +69,27 @@ class Symbol(Sentence):
 
     def symbols(self) -> set[str]:
         return {self.name}
+
+
+class Not(Sentence):
+    def __init__(self, operand: Sentence) -> None:
+        Sentence.validate(operand)
+        self.operand = operand
+
+    def __eq__(self, value: object, /) -> bool:
+        return isinstance(value, Not) and self.operand == value.operand
+
+    def __hash__(self) -> int:
+        return hash(("not", self.operand))
+
+    def __repr__(self) -> str:
+        return f"Not({self.operand})"
+
+    def evaluate(self, model: dict[str, bool]):
+        return not self.operand.evaluate(model)
+
+    def formula(self) -> str:
+        return "¬" + Sentence.parenthesize(self.operand.formula())
+
+    def symbols(self) -> set[str]:
+        return self.operand.symbols()
